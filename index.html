@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Repair Legend</title>
+<style>
+:root{--bg:#080b12;--panel:#131925;--panel2:#1b2433;--line:#303b4d;--red:#e5484d;--gold:#f2c14e;--text:#f7f8fa;--muted:#aeb7c5;--good:#41c787;--bad:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#182030 0,#080b12 48%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;min-height:100vh}.app{max-width:780px;margin:auto;padding:18px 16px 40px}.title{text-align:center;letter-spacing:.08em;margin:8px 0 4px;font-size:30px}.sub{text-align:center;color:var(--muted);margin:0 0 16px}.panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 16px 50px rgba(0,0,0,.28)}.hidden{display:none!important}.row{display:flex;gap:10px;flex-wrap:wrap}.status{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.stat{background:#0e1420;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:19px;color:var(--gold)}h2,h3{margin:8px 0 12px}.girls{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.girl{border:1px solid var(--line);background:#101722;border-radius:16px;padding:12px;text-align:center;cursor:pointer;color:var(--text)}.girl.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(242,193,78,.2)}.avatar{font-size:48px;display:block;margin-bottom:6px}.girl small{display:block;color:var(--muted);margin-top:5px}.btn{width:100%;border:0;border-radius:12px;padding:14px 12px;margin:6px 0;background:#263247;color:#fff;font-size:16px;font-weight:700}.btn:active{transform:scale(.99)}.btn.primary{background:linear-gradient(180deg,#f15459,#c72f35)}.btn.gold{background:linear-gradient(180deg,#f4c95d,#c79625);color:#201600}.btn.good{background:#198754}.btn.danger{background:#9e2f36}.speech{background:#0d131d;border-left:4px solid var(--gold);padding:14px;border-radius:10px;margin:12px 0;line-height:1.65}.customer{font-size:18px}.log{background:#090d14;border:1px solid var(--line);border-radius:12px;padding:12px;min-height:76px;line-height:1.6;color:#dbe1ea}.sectionLabel{font-size:13px;color:var(--muted);letter-spacing:.08em;margin:16px 0 5px}.questionGrid,.diagnosisGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.questionGrid button,.diagnosisGrid button{margin:0}.used{opacity:.45}.result{padding:14px;border-radius:12px;margin-top:12px;line-height:1.6}.result.ok{background:rgba(65,199,135,.12);border:1px solid var(--good)}.result.ng{background:rgba(255,107,107,.12);border:1px solid var(--bad)}.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:14px}.toggle{display:flex;align-items:center;gap:8px;justify-content:center;margin:12px 0;color:var(--muted)}input{accent-color:var(--red)}@media(max-width:560px){.girls{grid-template-columns:1fr}.girl{display:grid;grid-template-columns:58px 1fr;text-align:left;align-items:center}.girl .avatar{grid-row:1/3}.status{grid-template-columns:repeat(2,1fr)}.questionGrid,.diagnosisGrid{grid-template-columns:1fr}.title{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="title">🔧 REPAIR LEGEND</h1>
+  <p class="sub">ヒアリングで真相を見抜け。誤診は店の信用を奪う。</p>
+
+  <section id="selectScreen" class="panel">
+    <h2>受付アシスタントを選択</h2>
+    <p style="color:var(--muted)">選ぶとキャラクターボイスが流れます。</p>
+    <div class="girls" id="girls"></div>
+    <label class="toggle"><input id="voiceToggle" type="checkbox" checked> 音声を再生する</label>
+    <button id="startBtn" class="btn primary" disabled>少女を選んでゲーム開始</button>
+  </section>
+
+  <section id="gameScreen" class="panel hidden">
+    <div class="status">
+      <div class="stat">CASE<b id="caseNo">1</b></div>
+      <div class="stat">信用<b id="trust">100</b></div>
+      <div class="stat">売上<b id="sales">¥0</b></div>
+      <div class="stat">連勝<b id="streak">0</b></div>
+    </div>
+    <h2 id="caseTitle"></h2>
+    <div class="speech customer" id="customerText"></div>
+    <div class="speech" id="assistantText"></div>
+    <div class="sectionLabel">ヒアリング</div>
+    <div class="questionGrid" id="questions"></div>
+    <div class="sectionLabel">得られた情報</div>
+    <div class="log" id="log">まだ情報がありません。</div>
+    <div class="sectionLabel">修理判断</div>
+    <div class="diagnosisGrid" id="diagnoses"></div>
+    <div id="result"></div>
+    <button id="nextBtn" class="btn gold hidden">次の依頼へ</button>
+  </section>
+  <p class="footer">音声はiPhoneの日本語読み上げ機能を使用します。消音モードでも端末設定により再生されない場合があります。</p>
+</div>
+<script>
+const girls=[
+ {id:'hina',icon:'👩🏻‍🔧',name:'ヒナ',desc:'元気で前向きな受付担当',select:'私、ヒナ！今日も一緒に修理を成功させよう！',start:'リペアレジェンド、開幕！お客様の話をよく聞いて、真相を見抜こう！',correct:['さすが！完璧な診断だね！','大正解！この調子でいこう！','見抜いたね！修理成功！'],wrong:['待って、その判断は危険かも。','情報が足りないよ。もう一度考えて。','誤診だよ。原因を整理しよう。']},
+ {id:'rei',icon:'👩🏻‍💼',name:'レイ',desc:'冷静で分析が得意',select:'レイです。感覚ではなく、証拠から判断しましょう。',start:'業務開始。症状、履歴、再現条件を順番に確認してください。',correct:['妥当な診断です。お見事です。','根拠が揃っています。正解です。','分析成功。無駄のない判断です。'],wrong:['根拠が不足しています。','その結論は早計です。追加確認が必要です。','診断不一致。症状との整合性を見直してください。']},
+ {id:'mio',icon:'👧🏻',name:'ミオ',desc:'優しくお客様想い',select:'ミオです。お客様を安心させながら、一緒に直しましょうね。',start:'ゲームスタートです。焦らず、困っていることから聞いてみましょう。',correct:['よかった！お客様も安心しています！','大成功です。丁寧な聞き取りが実りましたね。','正解です！笑顔でお返しできますね。'],wrong:['うーん、まだ決めつけない方がよさそうです。','お客様のお話にヒントが残っています。','残念、違う原因でした。次はきっと大丈夫です。']}
+];
+
+const cases=[
+ {title:'iPhone 13｜充電できない',customer:'昨日まで使えていたのに、今朝から充電できません。今日中に必要なんです。',questions:[['いつから違和感がありましたか？','数週間前から、角度を変えないと充電できない時がありました。'],['別のケーブルでも試しましたか？','はい。ケーブルを変えても同じです。'],['落下や水濡れはありましたか？','落下も水濡れもありません。'],['充電口を掃除したことは？','一度もありません。ポケットに入れることが多いです。']],diagnoses:['充電口の異物詰まり・清掃','バッテリー交換','ドックコネクタ交換','基板修理'],correct:0,required:[0,1,3],price:3300,explain:'充電口に圧縮されたホコリが詰まり、端子が奥まで刺さっていませんでした。清掃で復旧しました。'},
+ {title:'iPhone SE2｜ホームボタンが押せない',customer:'画面交換してもらった後から、ホームボタンを押しても反応しません。指紋認証は使えます。',questions:[['修理前は押せていましたか？','はい。修理前は普通に使えていました。'],['指紋認証は反応しますか？','指紋認証だけは問題なく使えます。'],['強く押すと反応しますか？','強く押してもクリック感がありません。'],['交換した画面の種類は？','互換のコピーパネルだと聞いています。']],diagnoses:['ホームボタン故障','パネル側のホームボタン接触・組付け不良','基板故障','初期化'],correct:1,required:[0,1,2,3],price:0,explain:'指紋認証が生きているためボタン本体断線の可能性は低く、パネル側の金具・ガスケット・接触圧を再点検する案件です。'},
+ {title:'Nintendo Switch｜本体画面だけ真っ黒',customer:'テレビには映って遊べます。でも本体を持ち上げると画面だけ真っ黒です。音は出ています。',questions:[['テレビ出力中は操作できますか？','はい。ゲームも操作も正常です。'],['本体から音は聞こえますか？','はい。画面は黒いですが音は出ます。'],['落下歴はありますか？','何度か落としたことがあります。'],['明るい場所で薄く映っていますか？','よく見ると何も映っていません。']],diagnoses:['バッテリー交換','液晶または画面系統の故障','ゲームカードスロット交換','初期化'],correct:1,required:[0,1,2,3],price:26000,explain:'TV出力と操作が正常なため本体は起動しています。本体ディスプレイ、バックライト、コネクタ周辺を優先点検します。'},
+ {title:'Galaxy S23 Ultra｜表示が緑色に点滅',customer:'落としてから画面が緑に点滅します。タッチはたまに効きます。データは消したくありません。',questions:[['落下直後からですか？','はい。落とした直後から緑に点滅しています。'],['外傷や液晶漏れはありますか？','右下に黒いシミがあります。'],['通知音やバイブは動きますか？','通知音もバイブも動いています。'],['水濡れはありますか？','水濡れはありません。']],diagnoses:['画面交換','バッテリー交換','充電口交換','初期化'],correct:0,required:[0,1,2],price:49700,explain:'本体動作は継続し、落下直後から表示異常と液晶漏れがあるため、画面破損が第一候補です。'},
+ {title:'iPhone 13｜電流0A・PC認識なし',customer:'寝る前に充電して、朝起きたら電源が入りません。ケーブルを挿しても反応しません。',questions:[['充電電流は流れますか？','測定しても0.00Aのままです。'],['別のバッテリーで変化しますか？','正常なバッテリーでも0.00Aです。'],['PCは端末を認識しますか？','まったく認識しません。'],['MagSafeでは反応しますか？','MagSafeでも反応がありません。']],diagnoses:['画面交換','バッテリー交換','ドック交換のみ','基板電源系統の点検・修理'],correct:3,required:[0,1,2,3],price:24000,explain:'有線・無線とも給電せず、正常バッテリーでも変化なし、PC認識もないため、基板の一次電源系統を優先します。'},
+ {title:'Pixel 7｜背面が浮いてきた',customer:'最近、背面が少し浮いてきました。使えてはいますが、熱くなることがあります。',questions:[['浮きは徐々に大きくなっていますか？','ここ数日で目立つようになりました。'],['バッテリーの減りは早いですか？','以前よりかなり早く減ります。'],['強い発熱や異臭はありますか？','充電中に熱くなります。異臭はありません。'],['落下で背面が外れましたか？','落下はしていません。']],diagnoses:['背面パネルを接着するだけ','バッテリー膨張・交換','画面交換','初期化'],correct:1,required:[0,1,2,3],price:12800,explain:'落下なしで背面が徐々に浮き、持続時間低下と発熱があるため、膨張バッテリーの交換と安全確認が必要です。'},
+ {title:'AQUOS wish2｜音はするが画面が映らない',customer:'電源が入らなくなったと思います。着信すると音だけは鳴っています。',questions:[['着信音や振動はありますか？','着信音も振動もあります。'],['充電反応はありますか？','充電すると通知音が鳴ります。'],['落下歴はありますか？','一度、床に落としました。'],['強制再起動で変化しますか？','変化はなく、画面だけ真っ黒です。']],diagnoses:['画面交換','バッテリー交換','スピーカー交換','データ消去'],correct:0,required:[0,1,2,3],price:18000,explain:'端末は起動している反応があり、落下後に表示のみ失われているため、画面系統の故障が濃厚です。'},
+ {title:'Switch｜ゲームカードだけ読まない',customer:'SDカードは読めますが、ゲームカードを挿しても反応しません。',questions:[['複数のゲームカードで試しましたか？','3本試しましたが全部読みません。'],['SDカードは正常ですか？','SDカードは問題なく読み込めます。'],['カード端子に曲がりや汚れは？','中を覗くと端子が少し曲がって見えます。'],['本体更新は最新ですか？','最新ですが変化ありません。']],diagnoses:['SDカードスロット交換','ゲームカードスロット交換','液晶交換','初期化'],correct:1,required:[0,1,2],price:12000,explain:'複数カードで再現し、SDは正常、スロット内部の端子変形もあるため、ゲームカードスロット単体の故障です。'}
+];
+
+let selected=null,current=null,asked=[],caseNo=0,trust=100,sales=0,streak=0,locked=false,lastIndex=-1;
+const $=id=>document.getElementById(id);
+function speak(text,rate=1){if(!$('voiceToggle').checked||!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=rate;u.pitch=selected?.id==='mio'?1.15:selected?.id==='rei'?.9:1.05;const vs=speechSynthesis.getVoices();u.voice=vs.find(v=>v.lang.startsWith('ja'))||null;speechSynthesis.speak(u)}
+function renderGirls(){const box=$('girls');girls.forEach(g=>{const b=document.createElement('button');b.className='girl';b.innerHTML=`<span class="avatar">${g.icon}</span><b>${g.name}</b><small>${g.desc}</small>`;b.addEventListener('click',()=>{selected=g;document.querySelectorAll('.girl').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('startBtn').disabled=false;$('startBtn').textContent=`${g.name}とゲーム開始`;speak(g.select)});box.appendChild(b)})}
+function startGame(){if(!selected)return;$('selectScreen').classList.add('hidden');$('gameScreen').classList.remove('hidden');speak(selected.start,.95);setTimeout(nextCase,900)}
+function nextCase(){locked=false;asked=[];caseNo++;let idx;do{idx=Math.floor(Math.random()*cases.length)}while(cases.length>1&&idx===lastIndex);lastIndex=idx;current=cases[idx];$('caseNo').textContent=caseNo;$('caseTitle').textContent=current.title;$('customerText').innerHTML=`<b>お客様</b><br>「${current.customer}」`;$('assistantText').innerHTML=`<b>${selected.name}</b><br>「まずは質問して、修理判断の根拠を集めましょう。」`;$('log').textContent='まだ情報がありません。';$('result').innerHTML='';$('nextBtn').classList.add('hidden');renderQuestions();renderDiagnoses();speak(`ケース${caseNo}。${current.title}。お客様からの相談です。${current.customer}`,.92)}
+function renderQuestions(){const box=$('questions');box.innerHTML='';current.questions.forEach((q,i)=>{const b=document.createElement('button');b.className='btn';b.textContent=q[0];b.addEventListener('click',()=>ask(i,b));box.appendChild(b)})}
+function ask(i,b){if(locked||asked.includes(i))return;asked.push(i);b.classList.add('used');const lines=asked.map(n=>`・${current.questions[n][1]}`);$('log').innerHTML=lines.join('<br>');speak(current.questions[i][1],1)}
+function renderDiagnoses(){const box=$('diagnoses');box.innerHTML='';current.diagnoses.forEach((d,i)=>{const b=document.createElement('button');b.className='btn danger';b.textContent=d;b.addEventListener('click',()=>judge(i));box.appendChild(b)})}
+function judge(i){if(locked)return;locked=true;const enough=current.required.every(n=>asked.includes(n));const correct=i===current.correct&&enough;const partial=i===current.correct&&!enough;let msg='';if(correct){streak++;trust=Math.min(100,trust+2);sales+=current.price;msg=`<div class="result ok"><b>✅ 修理成功</b><br>${current.explain}<br><br>売上：¥${current.price.toLocaleString('ja-JP')}</div>`;speak(selected.correct[Math.floor(Math.random()*selected.correct.length)])}else{streak=0;trust=Math.max(0,trust-(partial?5:12));msg=`<div class="result ng"><b>❌ ${partial?'ヒアリング不足':'誤診'}</b><br>${partial?'判断方向は合っていますが、必要な確認が不足しています。':'選んだ修理内容は症状と一致しません。'}<br><br><b>正解：</b>${current.diagnoses[current.correct]}<br>${current.explain}</div>`;speak(selected.wrong[Math.floor(Math.random()*selected.wrong.length)])}$('result').innerHTML=msg;$('trust').textContent=trust;$('sales').textContent='¥'+sales.toLocaleString('ja-JP');$('streak').textContent=streak;$('nextBtn').classList.remove('hidden');document.querySelectorAll('#questions button,#diagnoses button').forEach(b=>b.disabled=true)}
+renderGirls();$('startBtn').addEventListener('click',startGame);$('nextBtn').addEventListener('click',nextCase);speechSynthesis?.getVoices?.();
+</script>
+</body>
+</html>
