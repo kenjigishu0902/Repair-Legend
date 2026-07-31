@@ -38,7 +38,8 @@ button{font:inherit;touch-action:manipulation}
 #result{margin-top:10px;font-size:17px;font-weight:1000}
 .good{color:#78e78a}
 .bad{color:#ff7777}
-#progressWrap{display:none;height:12px;background:#555;border-radius:999px;overflow:hidden;margin-top:12px}
+#progressWrap{display:none;height:12px;
+  background:#555;border-radius:999px;overflow:hidden;margin-top:12px}
 #progress{height:100%;width:0;background:var(--gold)}
 #nextBtn{display:none;width:100%;border:0;border-radius:12px;padding:12px;margin-top:10px;background:var(--gold);font-weight:1000}
 #hint{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);background:#fff;border-radius:999px;padding:8px 13px;font-weight:900;font-size:13px;box-shadow:0 4px 14px #0003;z-index:12;white-space:nowrap}
@@ -58,7 +59,6 @@ button{font:inherit;touch-action:manipulation}
 #sheet{bottom:78px;max-height:48dvh}
 }
 </style>
-
 </head>
 <body>
 <div id="game">
@@ -78,40 +78,6 @@ button{font:inherit;touch-action:manipulation}
     <div id="desk" class="station">修理台</div>
     <img id="player" src="feni.png" alt="フェニちゃん">
     <div id="customer"></div>
-
-    <div id="bubble">
-      <div id="bubbleTitle">お客様</div>
-      <div id="bubbleText"></div>
-      <button id="acceptBtn">受付する</button>
-    </div>
-
-    <div id="hint">まもなくお客様が来店します</div>
-  </div>
-
-  <div id="sheet">
-    <div id="sheetHead">
-      <div id="sheetTitle">修理依頼</div>
-      <button id="closeSheet">閉じる</button>
-    </div>
-    <div id="sheetText"></div>
-    <div id="choices"></div>
-    <div id="result"></div>
-    <div id="progressWrap"><div id="progress"></div></div>
-    <button id="nextBtn">完了</button>
-  </div>
-
-  <div id="gate">
-    <div id="gateCard">
-      <h1>Repair Legend v0.5</h1>
-      <p>お客様がフェニちゃんの近くまで歩いてきます。<br>1人終わると次のお客様が来店します。</p>
-      <button id="startBtn" type="button">ゲーム開始 🔊</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const $=id=>document.getElementById(id);
-
 const jobs=[
 {device:"iPhone 13",symptom:"バッテリーの減りが早くて困っています。",answer:"バッテリー交換",choices:["画面交換","バッテリー交換","ドック交換"],price:10800},
 {device:"iPhone 11",symptom:"音は鳴るのに画面が真っ暗です。",answer:"画面交換",choices:["画面交換","バッテリー交換","カメラ交換"],price:9800},
@@ -142,7 +108,6 @@ const jobs=[
 
 let current,state="idle",money=0,level=1,combo=0,cleared=0,lastIndex=-1;
 let audioCtx,bgmTimer,bgmOn=true,sfxOn=true;
-
 function initAudio(){
   try{
     if(!audioCtx){
@@ -165,6 +130,7 @@ function tone(freq,dur=.12,type="sine",vol=.12){
   g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
   o.stop(audioCtx.currentTime+dur);
 }
+
 const tapSound=()=>tone(520,.05,"square",.08);
 const arriveSound=()=>{tone(440,.09,"sine",.09);setTimeout(()=>tone(660,.12,"sine",.1),90)};
 const okSound=()=>{tone(660,.11,"square",.11);setTimeout(()=>tone(880,.18,"square",.12),90)};
@@ -188,7 +154,6 @@ function startBgm(){
     o.stop(audioCtx.currentTime+.28);
   },320);
 }
-
 function stopBgm(){
   clearInterval(bgmTimer);
   bgmTimer=null;
@@ -235,6 +200,11 @@ function sendCustomerIn(){
   $("customer").style.opacity="1";
   $("customer").style.left="-100px";
 
+
+
+
+
+
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     const playerX=$("player").offsetLeft;
     const target=Math.max(15,playerX-$("customer").offsetWidth-20);
@@ -259,7 +229,6 @@ function showBubble(){
 }
 
 function showQuestion(){
-
   if(state!=="talking")return;
   tapSound();
   state="question";
