@@ -165,7 +165,7 @@ function tone(freq,dur=.12,type="sine",vol=.12){
   g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
   o.stop(audioCtx.currentTime+dur);
 }
-t tapSound=()=>tone(520,.05,"square",.08);
+const tapSound=()=>tone(520,.05,"square",.08);
 const arriveSound=()=>{tone(440,.09,"sine",.09);setTimeout(()=>tone(660,.12,"sine",.1),90)};
 const okSound=()=>{tone(660,.11,"square",.11);setTimeout(()=>tone(880,.18,"square",.12),90)};
 const ngSound=()=>tone(150,.25,"sawtooth",.11);
