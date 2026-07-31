@@ -1,1 +1,286 @@
-<!DOCTYPE html><html lang='ja'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Repair Legend</title></head><body style='margin:0;font-family:sans-serif'><div id='game' style='position:relative;width:100vw;height:100vh;background:#f4efe6'><img id='player' src='assets/feni.png' style='position:absolute;width:150px;left:45%;top:60%'><div style='position:absolute;top:10px;left:10px;background:#fff;padding:10px'>💰<span id='m'>0</span>円</div><script>let p=document.getElementById('player'),x=innerWidth*.45,y=innerHeight*.6,tx=x,ty=y;game.onclick=e=>{tx=e.clientX-75;ty=e.clientY-75};function a(){x+=(tx-x)*.12;y+=(ty-y)*.12;p.style.left=x+'px';p.style.top=y+'px';requestAnimationFrame(a)}a();</script></div></body></html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Repair Legend</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#151515}
+button{font:inherit}
+#game{
+  position:relative;width:100vw;height:100vh;overflow:hidden;
+  background:
+    linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12)),
+    repeating-linear-gradient(0deg,transparent 0 63px,rgba(0,0,0,.05) 64px),
+    repeating-linear-gradient(90deg,transparent 0 63px,rgba(0,0,0,.05) 64px),
+    linear-gradient(#f4efe6 0 72%,#d0bea7 72% 100%);
+}
+#topUI{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:7px;z-index:90;flex-wrap:wrap}
+.uiBox{background:rgba(255,255,255,.97);padding:8px 11px;border-radius:13px;font-weight:900;box-shadow:0 4px 12px rgba(0,0,0,.17);font-size:14px}
+#status{background:#202020;color:#fff;margin-left:auto}
+#soundBtns{display:flex;gap:6px}
+.soundBtn{border:0;background:#fff;padding:8px 10px;border-radius:12px;font-weight:900;box-shadow:0 4px 12px rgba(0,0,0,.17)}
+.soundBtn.off{opacity:.45}
+.sign{
+  position:absolute;top:95px;left:50%;transform:translateX(-50%);
+  background:#b52626;color:white;padding:10px 18px;border-radius:10px;
+  font-size:20px;font-weight:1000;letter-spacing:1px;box-shadow:0 6px 15px rgba(0,0,0,.2)
+}
+#counter,#desk,#parts{
+  position:absolute;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:1000;border-radius:16px;box-shadow:0 8px 18px rgba(0,0,0,.22);z-index:8
+}
+#counter{left:5vw;top:20vh;width:34vw;max-width:270px;height:86px;background:linear-gradient(#a36b39,#6f431f)}
+#desk{right:5vw;top:42vh;width:34vw;max-width:270px;height:96px;background:linear-gradient(#777,#3f3f3f)}
+#parts{right:7vw;top:22vh;width:29vw;max-width:220px;height:78px;background:linear-gradient(#3c84a8,#22516a)}
+#customer{
+  position:absolute;left:7vw;top:53vh;width:92px;height:128px;
+  border-radius:45px 45px 18px 18px;background:linear-gradient(#62adff 0 36%,#edc39d 36% 61%,#324d7c 61%);
+  box-shadow:0 8px 18px rgba(0,0,0,.22);display:none;z-index:12
+}
+#customer::before{content:"";position:absolute;left:24px;top:8px;width:44px;height:44px;border-radius:50%;background:#f0c7a2}
+#customer::after{content:"お客様";position:absolute;left:50%;bottom:-25px;transform:translateX(-50%);white-space:nowrap;color:#222;font-size:12px;font-weight:900}
+#player{
+  position:absolute;left:42vw;top:61vh;width:150px;max-width:35vw;z-index:20;
+  pointer-events:none;user-select:none;filter:drop-shadow(0 10px 8px rgba(0,0,0,.24));transform-origin:center bottom
+}
+#speech{
+  position:absolute;display:none;z-index:45;max-width:235px;padding:10px 13px;
+  background:white;border-radius:17px;font-weight:900;text-align:center;box-shadow:0 5px 15px rgba(0,0,0,.2)
+}
+#panel{
+  position:absolute;left:50%;bottom:15px;transform:translateX(-50%);
+  width:min(94vw,560px);background:rgba(26,26,26,.96);color:#fff;border-radius:18px;
+  padding:14px;z-index:75;box-shadow:0 10px 30px rgba(0,0,0,.34);display:none
+}
+#panelTitle{font-size:18px;font-weight:1000;margin-bottom:6px}
+#panelText{font-size:14px;line-height:1.5;color:#eee}
+#buttons{display:flex;gap:9px;margin-top:11px}
+.action{flex:1;border:0;border-radius:12px;padding:11px 8px;font-weight:1000;background:#fff;color:#111}
+.action.primary{background:#ffb000}
+.action.red{background:#e84c4c;color:#fff}
+.action:disabled{opacity:.4}
+#quizBox{display:none;margin-top:10px}
+#question{font-weight:900;margin-bottom:8px}
+.choice{width:100%;border:0;border-radius:10px;padding:10px;margin-top:7px;background:#fff;color:#111;font-weight:800;text-align:left}
+#progressWrap{display:none;margin-top:10px;background:#555;height:12px;border-radius:999px;overflow:hidden}
+#progress{height:100%;width:0;background:#ffb000}
+#combo{display:none;margin-top:8px;color:#ffcf44;font-weight:1000}
+#hint{position:absolute;left:50%;top:61px;transform:translateX(-50%);background:rgba(0,0,0,.66);color:#fff;padding:6px 11px;border-radius:999px;font-size:11px;z-index:60;white-space:nowrap}
+.pop{position:absolute;z-index:110;font-size:25px;font-weight:1000;text-shadow:0 2px #fff;pointer-events:none;animation:pop 1.2s ease-out forwards}
+.good{color:#178531}.bad{color:#c22727}
+@keyframes pop{0%{opacity:0;transform:translateY(10px) scale(.8)}20%{opacity:1}100%{opacity:0;transform:translateY(-70px) scale(1.2)}}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="topUI">
+    <div class="uiBox">💰 <span id="money">0</span>円</div>
+    <div class="uiBox">⭐ Lv.<span id="level">1</span></div>
+    <div class="uiBox">🏆 <span id="score">0</span></div>
+    <div id="status" class="uiBox">待機中</div>
+    <div id="soundBtns">
+      <button id="bgmBtn" class="soundBtn">🎵 BGM</button>
+      <button id="sfxBtn" class="soundBtn">🔊 効果音</button>
+    </div>
+  </div>
+
+  <div id="hint">最初に画面をタップすると音が使えます</div>
+  <div class="sign">REPAIR LEGEND</div>
+  <div id="counter">受付</div>
+  <div id="parts">パーツ棚</div>
+  <div id="desk">修理台</div>
+  <div id="customer"></div>
+  <img id="player" src="feni.png" alt="フェニちゃん">
+  <div id="speech"></div>
+
+  <div id="panel">
+    <div id="panelTitle"></div>
+    <div id="panelText"></div>
+    <div id="quizBox">
+      <div id="question"></div>
+      <div id="choices"></div>
+      <div id="combo">連続正解：<span id="comboNum">0</span></div>
+    </div>
+    <div id="progressWrap"><div id="progress"></div></div>
+    <div id="buttons">
+      <button id="acceptBtn" class="action primary">受付する</button>
+      <button id="repairBtn" class="action" disabled>修理開始</button>
+      <button id="nextBtn" class="action primary" style="display:none">次へ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const game=$("game"),player=$("player"),speech=$("speech"),customer=$("customer"),panel=$("panel");
+const panelTitle=$("panelTitle"),panelText=$("panelText"),acceptBtn=$("acceptBtn"),repairBtn=$("repairBtn"),nextBtn=$("nextBtn");
+const quizBox=$("quizBox"),questionEl=$("question"),choicesEl=$("choices"),progressWrap=$("progressWrap"),progress=$("progress");
+const moneyEl=$("money"),levelEl=$("level"),scoreEl=$("score"),statusEl=$("status"),comboEl=$("combo"),comboNum=$("comboNum");
+const bgmBtn=$("bgmBtn"),sfxBtn=$("sfxBtn");
+
+let money=0,level=1,score=0,completed=0,combo=0;
+let state="waiting",job=null,questionIndex=0;
+let bgmOn=true,sfxOn=true,audioCtx=null,bgmTimer=null;
+
+const jobs=[
+ {device:"iPhone 11",issue:"画面が映らない",repair:"画面交換",price:9800,time:1800},
+ {device:"iPhone 13",issue:"バッテリーの減りが早い",repair:"バッテリー交換",price:10800,time:1900},
+ {device:"iPhone SE2",issue:"ホームボタンが反応しない",repair:"ホームボタン確認",price:7800,time:1700},
+ {device:"Nintendo Switch",issue:"ゲームカードを読み込まない",repair:"カードスロット交換",price:14800,time:2200},
+ {device:"Pixel 7",issue:"バッテリーが膨張している",repair:"バッテリー交換",price:12800,time:2100},
+ {device:"Galaxy S23 Ultra",issue:"画面が割れてタッチできない",repair:"画面交換",price:49700,time:2600},
+ {device:"AQUOS wish2",issue:"電源が入らない",repair:"画面・電源診断",price:15800,time:2300},
+ {device:"iPhone 15",issue:"充電ができない",repair:"ドックコネクタ診断",price:16800,time:2300}
+];
+
+const questions=[
+ {q:"修理前に最初に確認することは？",a:["動作確認とデータの説明","すぐ分解する","料金だけ伝える"],c:0},
+ {q:"バッテリー膨張端末の扱いで正しいのは？",a:["強く押して閉じる","発熱や発火に注意して慎重に扱う","充電しながら修理する"],c:1},
+ {q:"画面交換後に優先して確認する項目は？",a:["タッチ・表示・近接センサー","ケースの色","壁紙"],c:0},
+ {q:"水没端末で避けるべき行動は？",a:["電源を何度も入れる","電源を切って診断する","状態を聞き取る"],c:0},
+ {q:"修理前にお客様へ伝えるべき内容は？",a:["データ保証や作業リスク","自分の趣味","他店の悪口"],c:0},
+ {q:"充電不良で最初に確認するのは？",a:["ケーブル・充電器・差込口","画面の明るさ","着信音"],c:0},
+ {q:"修理後の確認で重要なのは？",a:["修理箇所だけ確認","基本動作を一通り確認","見た目だけ確認"],c:1},
+ {q:"SwitchがTV出力できるが本体画面だけ真っ黒。疑う箇所は？",a:["液晶や表示系統","Joy-Conの色","Wi-Fi"],c:0},
+ {q:"指紋認証部品の修理で特に注意することは？",a:["本体固有部品の可能性","色を合わせるだけ","充電速度"],c:0},
+ {q:"修理料金の案内で正しいのは？",a:["概算と追加費用の可能性を明確にする","必ず最安と言う","説明しない"],c:0},
+ {q:"パネル圧着後に必要なことは？",a:["粘着が安定するまで注意する","すぐ水につける","強くねじる"],c:0},
+ {q:"基板修理になる可能性が高い症状は？",a:["部品交換でも改善しない電源不良","フィルムの気泡","ケースの傷"],c:0}
+];
+
+let x=innerWidth*.42,y=innerHeight*.61,tx=x,ty=y,dir=1,moving=false,speed=6;
+
+function ensureAudio(){
+ if(audioCtx)return;
+ audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ startBgm();
+}
+function tone(freq=440,dur=.12,type="sine",vol=.07){
+ if(!sfxOn)return;
+ ensureAudio();
+ const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+ o.type=type;o.frequency.value=freq;g.gain.value=vol;
+ o.connect(g);g.connect(audioCtx.destination);o.start();
+ g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
+ o.stop(audioCtx.currentTime+dur);
+}
+function playSuccess(){tone(660,.12,"square",.05);setTimeout(()=>tone(880,.18,"square",.05),110)}
+function playFail(){tone(180,.22,"sawtooth",.05)}
+function playClick(){tone(420,.07,"sine",.035)}
+function startBgm(){
+ if(!bgmOn||!audioCtx||bgmTimer)return;
+ const notes=[261.63,329.63,392,523.25,392,329.63,293.66,349.23];
+ let i=0;
+ bgmTimer=setInterval(()=>{
+   if(!bgmOn)return;
+   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+   o.type="triangle";o.frequency.value=notes[i++%notes.length];g.gain.value=.018;
+   o.connect(g);g.connect(audioCtx.destination);o.start();
+   g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.28);
+   o.stop(audioCtx.currentTime+.28);
+ },320);
+}
+function stopBgm(){clearInterval(bgmTimer);bgmTimer=null}
+
+bgmBtn.onclick=()=>{
+ ensureAudio();bgmOn=!bgmOn;bgmBtn.classList.toggle("off",!bgmOn);
+ bgmOn?startBgm():stopBgm();
+};
+sfxBtn.onclick=()=>{
+ ensureAudio();sfxOn=!sfxOn;sfxBtn.classList.toggle("off",!sfxOn);
+ if(sfxOn)playClick();
+};
+
+function showSpeech(t){
+ speech.textContent=t;speech.style.display="block";
+ clearTimeout(showSpeech.t);showSpeech.t=setTimeout(()=>speech.style.display="none",1600);
+}
+function setStatus(t){statusEl.textContent=t}
+function updateUI(){moneyEl.textContent=money.toLocaleString();levelEl.textContent=level;scoreEl.textContent=score}
+function showPop(text,good=true){
+ const p=document.createElement("div");p.className="pop "+(good?"good":"bad");p.textContent=text;
+ p.style.left="50%";p.style.top="40%";game.appendChild(p);setTimeout(()=>p.remove(),1250)
+}
+function spawnCustomer(){
+ if(state!=="waiting")return;
+ job=jobs[Math.floor(Math.random()*jobs.length)];
+ state="arrived";customer.style.display="block";panel.style.display="block";
+ panelTitle.textContent="お客様が来店しました";
+ panelText.innerHTML=`機種：<b>${job.device}</b><br>症状：<b>${job.issue}</b><br>予定修理：<b>${job.repair}</b><br>報酬：<b>${job.price.toLocaleString()}円</b>`;
+ quizBox.style.display="none";progressWrap.style.display="none";
+ acceptBtn.style.display="block";repairBtn.style.display="block";nextBtn.style.display="none";
+ acceptBtn.disabled=false;repairBtn.disabled=true;setStatus("来店中");showSpeech("いらっしゃいませ！");
+ tone(520,.12,"sine",.04);
+}
+acceptBtn.onclick=()=>{
+ ensureAudio();playClick();state="accepted";acceptBtn.disabled=true;repairBtn.disabled=false;setStatus("受付済み");showSpeech("受付しました！");
+};
+repairBtn.onclick=()=>{
+ playClick();state="quiz";acceptBtn.style.display="none";repairBtn.style.display="none";quizBox.style.display="block";
+ questionIndex=0;combo=0;comboEl.style.display="block";comboNum.textContent=combo;setStatus("診断クイズ");showQuestion();
+};
+function showQuestion(){
+ const q=questions[Math.floor(Math.random()*questions.length)];
+ questionEl.textContent=`問題 ${questionIndex+1}/3：${q.q}`;
+ choicesEl.innerHTML="";
+ q.a.forEach((txt,i)=>{
+   const b=document.createElement("button");b.className="choice";b.textContent=txt;
+   b.onclick=()=>answer(i===q.c);choicesEl.appendChild(b);
+ });
+}
+function answer(correct){
+ [...choicesEl.children].forEach(b=>b.disabled=true);
+ if(correct){combo++;score+=100*combo;showPop("正解！ +"+(100*combo)+"pt",true);playSuccess();showSpeech("その判断で正解！")}
+ else{combo=0;score=Math.max(0,score-50);showPop("不正解 -50pt",false);playFail();showSpeech("慎重に確認しよう！")}
+ comboNum.textContent=combo;updateUI();questionIndex++;
+ setTimeout(()=>{
+   if(questionIndex<3)showQuestion();
+   else startRepairProgress();
+ },800);
+}
+function startRepairProgress(){
+ state="repairing";quizBox.style.display="none";progressWrap.style.display="block";progress.style.width="0";setStatus("修理中");showSpeech("修理開始！");
+ const start=performance.now();
+ function tick(now){
+   const r=Math.min(1,(now-start)/job.time);progress.style.width=(r*100)+"%";
+   if(r<1)requestAnimationFrame(tick);else finishRepair();
+ }
+ requestAnimationFrame(tick);
+}
+function finishRepair(){
+ state="complete";money+=job.price;completed++;level=1+Math.floor(completed/3);score+=500;
+ updateUI();playSuccess();showPop("+"+job.price.toLocaleString()+"円",true);showSpeech("修理完了！");
+ panelTitle.textContent="修理成功！";
+ panelText.innerHTML=`${job.device}の${job.repair}が完了しました。<br>獲得：<b>${job.price.toLocaleString()}円</b> ／ ボーナス：<b>500pt</b>`;
+ progressWrap.style.display="none";nextBtn.style.display="block";setStatus("修理完了");
+}
+nextBtn.onclick=()=>{
+ playClick();customer.style.display="none";panel.style.display="none";nextBtn.style.display="none";
+ state="waiting";setStatus("待機中");setTimeout(spawnCustomer,1200);
+};
+
+game.addEventListener("pointerdown",e=>{
+ ensureAudio();
+ if(e.target.closest("button")||e.target===panel)return;
+ const r=game.getBoundingClientRect();tx=e.clientX-r.left-player.offsetWidth/2;ty=e.clientY-r.top-player.offsetHeight/2;
+ tx=Math.max(0,Math.min(tx,game.clientWidth-player.offsetWidth));
+ ty=Math.max(75,Math.min(ty,game.clientHeight-player.offsetHeight));
+ moving=true;
+},{passive:true});
+
+function loop(){
+ const dx=tx-x,dy=ty-y,d=Math.hypot(dx,dy);
+ if(d>speed){x+=dx/d*speed;y+=dy/d*speed;dir=dx>=0?1:-1;moving=true}else{x=tx;y=ty;moving=false}
+ player.style.left=x+"px";player.style.top=y+"px";
+ const bob=moving?Math.sin(Date.now()/80)*6:Math.sin(Date.now()/450)*3;
+ const rot=moving?Math.sin(Date.now()/100)*2.5:0;
+ player.style.transform=`translateY(${bob}px) scaleX(${dir}) rotate(${rot}deg)`;
+ speech.style.left=(x+player.offsetWidth/2-speech.offsetWidth/2)+"px";speech.style.top=Math.max(73,y-55)+"px";
+ requestAnimationFrame(loop);
+}
+updateUI();loop();setTimeout(spawnCustomer,900);
+</script>
+</body>
+</html>
