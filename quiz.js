@@ -1186,5 +1186,5 @@
         checkAnswer,
         shuffleArray,
         shuffleQuestionChoices,
-        validateQuizData
+        validateQuizData 
     });
