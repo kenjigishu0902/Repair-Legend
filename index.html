@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repair Legend v1.0</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="game">
+
+<header id="hud">
+    <div>💰 <span id="money">0</span>円</div>
+    <div>⭐ Lv.<span id="level">1</span></div>
+    <div>🔥 <span id="combo">0</span></div>
+</header>
+
+<main id="world">
+
+<div id="shop">
+
+<div id="counter">
+受付
+</div>
+
+<div id="parts">
+パーツ棚
+</div>
+
+<div id="desk">
+修理台
+</div>
+
+</div>
+
+<img id="player" src="assets/feni.png">
+
+<div id="customer"></div>
+
+<div id="speech" class="hidden">
+<p id="speechText"></p>
+<button id="acceptBtn">
+受付する
+</button>
+</div>
+
+</main>
+
+<div id="questionWindow" class="hidden">
+
+<h2 id="deviceName"></h2>
+
+<p id="symptom"></p>
+
+<div id="choices"></div>
+
+<div id="result"></div>
+
+</div>
+
+<div id="startScreen">
+
+<h1>Repair Legend</h1>
+
+<button id="startButton">
+ゲーム開始
+</button>
+
+</div>
+
+</div>
+
+<script src="questions.js"></script>
+<script src="audio.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>
