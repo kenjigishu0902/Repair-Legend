@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Repair Legend v1.0</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Repair Legend</title>
 
 <link rel="stylesheet" href="style.css">
 </head>
@@ -12,15 +12,25 @@
 
 <div id="game">
 
-<header id="hud">
-    <div>💰 <span id="money">0</span>円</div>
-    <div>⭐ Lv.<span id="level">1</span></div>
-    <div>🔥 <span id="combo">0</span></div>
-</header>
+<div id="hud">
+<div class="badge">💰 <span id="money">0</span>円</div>
+<div class="badge">⭐ Lv.<span id="level">1</span></div>
+<div class="badge">🔥 <span id="combo">0</span></div>
 
-<main id="world">
+<div id="status" class="badge">
+待機中
+</div>
 
-<div id="shop">
+<button id="bgmBtn">🎵</button>
+<button id="sfxBtn">🔊</button>
+
+</div>
+
+<div id="world">
+
+<div class="sign">
+REPAIR LEGEND
+</div>
 
 <div id="counter">
 受付
@@ -34,20 +44,27 @@
 修理台
 </div>
 
-</div>
-
 <img id="player" src="assets/feni.png">
 
 <div id="customer"></div>
 
 <div id="speech" class="hidden">
+
+<strong id="speechTitle"></strong>
+
 <p id="speechText"></p>
+
 <button id="acceptBtn">
 受付する
 </button>
+
 </div>
 
-</main>
+<div id="hint">
+ゲーム開始を押してください
+</div>
+
+</div>
 
 <div id="questionWindow" class="hidden">
 
@@ -59,11 +76,25 @@
 
 <div id="result"></div>
 
+<div id="progressWrap">
+<div id="progress"></div>
+</div>
+
+<button id="nextBtn">
+次のお客様へ
+</button>
+
 </div>
 
 <div id="startScreen">
 
-<h1>Repair Legend</h1>
+<h1>
+Repair Legend
+</h1>
+
+<p>
+スマホ修理シミュレーター
+</p>
 
 <button id="startButton">
 ゲーム開始
