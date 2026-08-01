@@ -2,17 +2,37 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+>
+
 <meta name="theme-color" content="#20252b">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+>
+
+<meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent"
+>
 
 <title>Repair Legend v1.0</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+>
 
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<link
+    href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap"
+    rel="stylesheet"
+>
 
 <link rel="stylesheet" href="style.css">
 </head>
@@ -21,13 +41,14 @@
 
 <div id="game">
 
-    <!--========================
-        BACKGROUND
-    ========================-->
+    <!-- ========================
+         BACKGROUND
+    ========================= -->
 
     <div id="background">
 
         <div id="wall"></div>
+
         <div id="floor"></div>
 
         <div id="entrance">
@@ -40,9 +61,10 @@
 
     </div>
 
-    <!--========================
-        HUD
-    ========================-->
+
+    <!-- ========================
+         HUD
+    ========================= -->
 
     <header id="hud">
 
@@ -68,9 +90,10 @@
 
     </header>
 
-    <!--========================
-        CUSTOMER AREA
-    ========================-->
+
+    <!-- ========================
+         CUSTOMER AREA
+    ========================= -->
 
     <section id="customerArea">
 
@@ -79,23 +102,26 @@
         <div id="customer">
 
             <img
-                <img src="customer.png" id="customerSprite" alt="customer">
+                src="customer.png"
                 id="customerSprite"
-                alt="customer">
+                alt="お客様"
+            >
 
         </div>
+
 
         <!-- FENI -->
 
         <div id="feni">
 
             <img
-                
-                <img src="feni.png" id="feniSprite" alt="Feni">
+                src="feni.png"
                 id="feniSprite"
-                alt="Feni">
+                alt="フェニちゃん"
+            >
 
         </div>
+
 
         <!-- SPEECH -->
 
@@ -109,9 +135,10 @@
 
     </section>
 
-    <!--========================
-        REPAIR GAUGE
-    ========================-->
+
+    <!-- ========================
+         REPAIR GAUGE
+    ========================= -->
 
     <section id="repairPanel">
 
@@ -120,9 +147,7 @@
         </div>
 
         <div id="repairGaugeFrame">
-
             <div id="repairGauge"></div>
-
         </div>
 
         <div id="repairPercent">
@@ -131,9 +156,10 @@
 
     </section>
 
-    <!--========================
-        EFFECTS
-    ========================-->
+
+    <!-- ========================
+         EFFECTS
+    ========================= -->
 
     <div id="effects">
 
@@ -149,31 +175,51 @@
 
     </div>
 
-    <!--========================
-        TOUCH MAP
-    ========================-->
+
+    <!-- ========================
+         TOUCH MAP
+    ========================= -->
 
     <div id="touchMap">
 
-        <button class="touchSpot" id="spotCounter"></button>
+        <button
+            class="touchSpot"
+            id="spotCounter"
+            type="button"
+            aria-label="修理カウンター"
+        ></button>
 
-        <button class="touchSpot" id="spotPoster"></button>
+        <button
+            class="touchSpot"
+            id="spotPoster"
+            type="button"
+            aria-label="店内ポスター"
+        ></button>
 
-        <button class="touchSpot" id="spotShelf"></button>
+        <button
+            class="touchSpot"
+            id="spotShelf"
+            type="button"
+            aria-label="パーツ棚"
+        ></button>
 
-        <button class="touchSpot" id="spotDoor"></button>
+        <button
+            class="touchSpot"
+            id="spotDoor"
+            type="button"
+            aria-label="入口"
+        ></button>
 
     </div>
 
 </div>
 
-<!--====================================
-        QUIZ WINDOW
-=====================================-->
+
+<!-- ========================
+     QUIZ WINDOW
+========================= -->
 
 <section id="quizWindow">
-
-    <!-- TOP -->
 
     <div id="quizTop">
 
@@ -193,30 +239,43 @@
 
     </div>
 
-    <!-- QUESTION -->
 
     <div id="question">
-
         修理知識クイズがここに表示されます。
     </div>
 
-    <!-- ANSWERS -->
 
     <div id="answers">
 
-        <button class="answerBtn" data-answer="0">
+        <button
+            class="answerBtn"
+            data-answer="0"
+            type="button"
+        >
             A
         </button>
 
-        <button class="answerBtn" data-answer="1">
+        <button
+            class="answerBtn"
+            data-answer="1"
+            type="button"
+        >
             B
         </button>
 
-        <button class="answerBtn" data-answer="2">
+        <button
+            class="answerBtn"
+            data-answer="2"
+            type="button"
+        >
             C
         </button>
 
-        <button class="answerBtn" data-answer="3">
+        <button
+            class="answerBtn"
+            data-answer="3"
+            type="button"
+        >
             D
         </button>
 
@@ -224,9 +283,10 @@
 
 </section>
 
-<!--====================================
-        START MENU
-=====================================-->
+
+<!-- ========================
+     START MENU
+========================= -->
 
 <div id="startScreen">
 
@@ -242,65 +302,65 @@
 
     </div>
 
+
     <div id="logoCharacter">
 
         <img
-            
-            <img src="feni.png" id="feniSprite" alt="Feni">
-            alt="Feni">
+            src="feni.png"
+            id="titleFeniSprite"
+            alt="フェニちゃん"
+        >
 
     </div>
+
 
     <div id="description">
-
         スマホ修理店経営 × 修理知識ゲーム
-
     </div>
 
-    <button id="startButton">
 
+    <button
+        id="startButton"
+        type="button"
+    >
         GAME START
-
     </button>
 
 </div>
 
-<!--====================================
-        RECEPTION
-=====================================-->
+
+<!-- ========================
+     RECEPTION
+========================= -->
 
 <div id="receptionWindow">
 
     <div class="windowTitle">
-
         お客様対応
-
     </div>
 
     <div id="customerSymptom">
-
         症状がここへ表示されます。
-
     </div>
 
-    <button id="acceptButton">
-
+    <button
+        id="acceptButton"
+        type="button"
+    >
         受付する
-
     </button>
 
 </div>
 
-<!--====================================
-        RESULT
-=====================================-->
+
+<!-- ========================
+     RESULT
+========================= -->
 
 <div id="resultWindow">
 
     <h2>
-
         RESULT
-
     </h2>
 
     <div class="resultRow">
@@ -333,49 +393,73 @@
 
     </div>
 
-    <button id="nextCustomer">
-
+    <button
+        id="nextCustomer"
+        type="button"
+    >
         次のお客様
-
     </button>
 
 </div>
 
-<!--====================================
-        AUDIO
-=====================================-->
+
+<!-- ========================
+     AUDIO
+========================= -->
 
 <audio id="bgm" loop preload="auto">
-    <source src="sounds/bgm.mp3" type="audio/mpeg">
+    <source
+        src="sounds/bgm.mp3"
+        type="audio/mpeg"
+    >
 </audio>
 
 <audio id="tapSound" preload="auto">
-    <source src="sounds/tap.mp3" type="audio/mpeg">
+    <source
+        src="sounds/tap.mp3"
+        type="audio/mpeg"
+    >
 </audio>
 
 <audio id="bellSound" preload="auto">
-    <source src="sounds/bell.mp3" type="audio/mpeg">
+    <source
+        src="sounds/bell.mp3"
+        type="audio/mpeg"
+    >
 </audio>
 
 <audio id="correctSound" preload="auto">
-    <source src="sounds/correct.mp3" type="audio/mpeg">
+    <source
+        src="sounds/correct.mp3"
+        type="audio/mpeg"
+    >
 </audio>
 
 <audio id="wrongSound" preload="auto">
-    <source src="sounds/wrong.mp3" type="audio/mpeg">
+    <source
+        src="sounds/wrong.mp3"
+        type="audio/mpeg"
+    >
 </audio>
 
 <audio id="repairSound" preload="auto">
-    <source src="sounds/repair.mp3" type="audio/mpeg">
+    <source
+        src="sounds/repair.mp3"
+        type="audio/mpeg"
+    >
 </audio>
 
 <audio id="coinSound" preload="auto">
-    <source src="sounds/coin.mp3" type="audio/mpeg">
+    <source
+        src="sounds/coin.mp3"
+        type="audio/mpeg"
+    >
 </audio>
 
-<!--====================================
-        SCRIPTS
-=====================================-->
+
+<!-- ========================
+     SCRIPTS
+========================= -->
 
 <script src="quiz.js"></script>
 <script src="sound.js"></script>
