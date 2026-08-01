@@ -707,7 +707,7 @@
             repairName: "内部清掃",
             reward: 1500,
             gaugeGain: 20
-        },
+        },　
 
         {
             id: 35,
