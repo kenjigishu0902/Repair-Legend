@@ -1187,4 +1187,4 @@
         shuffleArray,
         shuffleQuestionChoices,
         validateQuizData 
-    });　
+    });
