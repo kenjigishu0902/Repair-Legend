@@ -6,7 +6,7 @@ const customerLines = [
     "できれば今日中に直したいです。",
     "急に使えなくなって困っています。",
     "修理できるか見てもらえますか？"
-];
+]; 
 
 let customerQueue = [];
 let customerBusy = false;
