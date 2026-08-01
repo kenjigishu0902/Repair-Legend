@@ -1188,3 +1188,6 @@
         shuffleQuestionChoices,
         validateQuizData 
     });
+        window.quizData = QUIZ_DATA.map(cloneQuestion);
+
+})();
