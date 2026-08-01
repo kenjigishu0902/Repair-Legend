@@ -722,7 +722,7 @@
                 "ゲームデータを消せば直る"
             ],
             correctIndex: 0,
-            explanation: "強い破損では端子周辺の基板パターン剥離や充電回路故障を伴う場合があります。",
+            explanation: "強い破損では端子周辺の基板パターン剥離や充電回路故障を伴う場合があります。",　
             repairName: "USB-C基板修理",
             reward: 2200,
             gaugeGain: 20
