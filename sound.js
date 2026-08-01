@@ -1,30 +1,26 @@
 /* =========================================================
    Repair Legend v1.0
-   sound.js - Web Audio API 完成版
+   sound.js - iPhone / iPad Safari 音声強化版
 
    外部MP3不要
    ・BGM
-   ・タップ音
+   ・操作音
    ・来店ベル
-   ・正解音
-   ・不正解音
-   ・修理完了音
-   ・コイン音
-   ・iPhone / iPad Safari対応
+   ・正解 / 不正解
+   ・修理完了
+   ・コイン
    ========================================================= */
 
 "use strict";
 
 (function () {
-    const STORAGE_KEY = "repairLegendSoundMuted";
-
     let audioContext = null;
     let masterGain = null;
     let bgmGain = null;
     let effectGain = null;
 
-    let unlocked = false;
     let muted = false;
+    let unlocked = false;
     let bgmPlaying = false;
     let bgmTimer = null;
     let bgmStep = 0;
@@ -35,22 +31,6 @@
         440.00, 523.25, 440.00, 349.23,
         293.66, 329.63, 392.00, 329.63
     ];
-
-    function loadMutedState() {
-        try {
-            muted = localStorage.getItem(STORAGE_KEY) === "true";
-        } catch (error) {
-            muted = false;
-        }
-    }
-
-    function saveMutedState() {
-        try {
-            localStorage.setItem(STORAGE_KEY, String(muted));
-        } catch (error) {
-            // 保存できなくてもゲームは続行する
-        }
-    }
 
     function getAudioContextClass() {
         return window.AudioContext || window.webkitAudioContext || null;
@@ -68,21 +48,21 @@
             return false;
         }
 
-        loadMutedState();
-
         audioContext = new AudioContextClass();
 
         masterGain = audioContext.createGain();
         bgmGain = audioContext.createGain();
         effectGain = audioContext.createGain();
 
-        masterGain.gain.value = muted ? 0 : 1;
-        bgmGain.gain.value = 0.17;
-        effectGain.gain.value = 0.55;
+        masterGain.gain.value = 1;
+        bgmGain.gain.value = 0.22;
+        effectGain.gain.value = 0.75;
 
         bgmGain.connect(masterGain);
         effectGain.connect(masterGain);
         masterGain.connect(audioContext.destination);
+
+        muted = false;
 
         return true;
     }
@@ -93,53 +73,54 @@
         }
 
         try {
-            if (audioContext.state === "suspended") {
+            if (audioContext.state !== "running") {
                 await audioContext.resume();
             }
 
             const oscillator = audioContext.createOscillator();
             const gain = audioContext.createGain();
+            const now = audioContext.currentTime;
 
-            gain.gain.value = 0.0001;
+            oscillator.type = "square";
+            oscillator.frequency.value = 440;
+
+            gain.gain.setValueAtTime(0.0001, now);
+
             oscillator.connect(gain);
             gain.connect(masterGain);
 
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.02);
+            oscillator.start(now);
+            oscillator.stop(now + 0.02);
 
-            unlocked = true;
-            return true;
+            unlocked = audioContext.state === "running";
+            return unlocked;
         } catch (error) {
-            console.warn("音声の解放に失敗しました。", error);
+            console.warn("音声の初期化に失敗しました。", error);
             return false;
         }
     }
 
     function playTone(options = {}) {
-        if (!initialize() || muted) {
-            return;
+        if (!initialize() || muted || audioContext.state !== "running") {
+            return false;
         }
 
         const {
             frequency = 440,
             endFrequency = frequency,
             duration = 0.12,
-            volume = 0.25,
+            volume = 0.2,
             type = "square",
             delay = 0,
             destination = effectGain
         } = options;
 
-        const now = audioContext.currentTime + delay;
+        const now = audioContext.currentTime + Math.max(0, delay);
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
 
         oscillator.type = type;
-        oscillator.frequency.setValueAtTime(
-            Math.max(20, frequency),
-            now
-        );
-
+        oscillator.frequency.setValueAtTime(Math.max(20, frequency), now);
         oscillator.frequency.exponentialRampToValueAtTime(
             Math.max(20, endFrequency),
             now + duration
@@ -159,23 +140,22 @@
         gain.connect(destination);
 
         oscillator.start(now);
-        oscillator.stop(now + duration + 0.03);
+        oscillator.stop(now + duration + 0.04);
+
+        return true;
     }
 
-    function playNoise(options = {}) {
-        if (!initialize() || muted) {
-            return;
+    function playNoise(duration = 0.15, volume = 0.08) {
+        if (!initialize() || muted || audioContext.state !== "running") {
+            return false;
         }
 
-        const {
-            duration = 0.12,
-            volume = 0.12,
-            delay = 0
-        } = options;
-
-        const sampleRate = audioContext.sampleRate;
-        const frameCount = Math.floor(sampleRate * duration);
-        const buffer = audioContext.createBuffer(1, frameCount, sampleRate);
+        const frameCount = Math.floor(audioContext.sampleRate * duration);
+        const buffer = audioContext.createBuffer(
+            1,
+            frameCount,
+            audioContext.sampleRate
+        );
         const data = buffer.getChannelData(0);
 
         for (let index = 0; index < frameCount; index += 1) {
@@ -183,50 +163,54 @@
         }
 
         const source = audioContext.createBufferSource();
-        const gain = audioContext.createGain();
         const filter = audioContext.createBiquadFilter();
-        const now = audioContext.currentTime + delay;
-
-        filter.type = "highpass";
-        filter.frequency.value = 1200;
-
-        gain.gain.setValueAtTime(volume, now);
-        gain.gain.exponentialRampToValueAtTime(
-            0.0001,
-            now + duration
-        );
+        const gain = audioContext.createGain();
+        const now = audioContext.currentTime;
 
         source.buffer = buffer;
+
+        filter.type = "highpass";
+        filter.frequency.value = 1000;
+
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
         source.connect(filter);
         filter.connect(gain);
         gain.connect(effectGain);
 
         source.start(now);
         source.stop(now + duration);
+
+        return true;
     }
 
     function scheduleBgmStep() {
-        if (!bgmPlaying || muted || !audioContext) {
+        if (
+            !bgmPlaying ||
+            muted ||
+            !audioContext ||
+            audioContext.state !== "running"
+        ) {
             return;
         }
 
         const note = BGM_NOTES[bgmStep % BGM_NOTES.length];
-        const bass = note / 2;
 
         playTone({
             frequency: note,
             endFrequency: note,
-            duration: 0.16,
-            volume: 0.10,
+            duration: 0.17,
+            volume: 0.11,
             type: "square",
             destination: bgmGain
         });
 
         if (bgmStep % 2 === 0) {
             playTone({
-                frequency: bass,
-                endFrequency: bass,
-                duration: 0.28,
+                frequency: note / 2,
+                endFrequency: note / 2,
+                duration: 0.30,
                 volume: 0.08,
                 type: "triangle",
                 destination: bgmGain
@@ -234,15 +218,15 @@
         }
 
         bgmStep += 1;
-        bgmTimer = window.setTimeout(scheduleBgmStep, 220);
+        bgmTimer = window.setTimeout(scheduleBgmStep, 230);
     }
 
     async function playBgm(options = {}) {
         const { restart = false } = options;
 
-        await unlockAudio();
+        const ready = await unlockAudio();
 
-        if (!audioContext || muted) {
+        if (!ready || muted) {
             return false;
         }
 
@@ -264,7 +248,7 @@
         bgmPlaying = false;
 
         if (bgmTimer !== null) {
-            clearTimeout(bgmTimer);
+            window.clearTimeout(bgmTimer);
             bgmTimer = null;
         }
     }
@@ -275,11 +259,11 @@
     }
 
     function playTap() {
-        playTone({
-            frequency: 760,
-            endFrequency: 540,
-            duration: 0.06,
-            volume: 0.14,
+        return playTone({
+            frequency: 820,
+            endFrequency: 520,
+            duration: 0.07,
+            volume: 0.20,
             type: "square"
         });
     }
@@ -287,17 +271,17 @@
     function playBell() {
         playTone({
             frequency: 659.25,
-            duration: 0.24,
-            volume: 0.20,
+            duration: 0.25,
+            volume: 0.24,
             type: "sine"
         });
 
         playTone({
             frequency: 987.77,
             duration: 0.38,
-            volume: 0.17,
+            volume: 0.22,
             type: "sine",
-            delay: 0.11
+            delay: 0.12
         });
     }
 
@@ -305,8 +289,8 @@
         [523.25, 659.25, 783.99].forEach((frequency, index) => {
             playTone({
                 frequency,
-                duration: 0.13,
-                volume: 0.18,
+                duration: 0.14,
+                volume: 0.22,
                 type: "square",
                 delay: index * 0.09
             });
@@ -316,44 +300,41 @@
     function playWrong() {
         playTone({
             frequency: 220,
-            endFrequency: 92,
-            duration: 0.38,
-            volume: 0.22,
+            endFrequency: 80,
+            duration: 0.42,
+            volume: 0.26,
             type: "sawtooth"
         });
 
-        playNoise({
-            duration: 0.18,
-            volume: 0.07
-        });
+        playNoise(0.18, 0.08);
     }
 
     function playRepairComplete() {
-        const notes = [392.00, 523.25, 659.25, 783.99, 1046.50];
-
-        notes.forEach((frequency, index) => {
-            playTone({
-                frequency,
-                duration: 0.18,
-                volume: 0.17,
-                type: index % 2 === 0 ? "square" : "triangle",
-                delay: index * 0.08
-            });
-        });
+        [392.00, 523.25, 659.25, 783.99, 1046.50].forEach(
+            (frequency, index) => {
+                playTone({
+                    frequency,
+                    duration: 0.20,
+                    volume: 0.21,
+                    type: index % 2 === 0 ? "square" : "triangle",
+                    delay: index * 0.08
+                });
+            }
+        );
     }
 
     function playCoin() {
         playTone({
             frequency: 880,
-            duration: 0.08,
-            volume: 0.16,
+            duration: 0.09,
+            volume: 0.22,
             type: "square"
         });
 
         playTone({
             frequency: 1318.51,
-            duration: 0.17,
-            volume: 0.19,
+            duration: 0.18,
+            volume: 0.24,
             type: "square",
             delay: 0.07
         });
@@ -361,19 +342,22 @@
 
     function playComboCoin(combo = 1) {
         const safeCombo = Math.max(1, Number(combo) || 1);
-        const multiplier = Math.min(1.65, 1 + (safeCombo - 1) * 0.055);
+        const multiplier = Math.min(
+            1.65,
+            1 + (safeCombo - 1) * 0.055
+        );
 
         playTone({
             frequency: 880 * multiplier,
-            duration: 0.08,
-            volume: 0.15,
+            duration: 0.09,
+            volume: 0.21,
             type: "square"
         });
 
         playTone({
             frequency: 1318.51 * multiplier,
-            duration: 0.16,
-            volume: 0.18,
+            duration: 0.18,
+            volume: 0.23,
             type: "square",
             delay: 0.06
         });
@@ -390,27 +374,18 @@
             pauseBgm();
         }
 
-        saveMutedState();
         return muted;
     }
 
     function toggleMute() {
-        const wasPlaying = bgmPlaying;
+        const shouldResume = bgmPlaying;
         const result = setMuted(!muted);
 
-        if (!result && wasPlaying) {
+        if (!result && shouldResume) {
             playBgm();
         }
 
         return result;
-    }
-
-    function isMuted() {
-        return muted;
-    }
-
-    function isBgmPlaying() {
-        return bgmPlaying;
     }
 
     function getStatus() {
@@ -419,11 +394,29 @@
             unlocked,
             muted,
             bgmPlaying,
-            contextState: audioContext ? audioContext.state : "unavailable"
+            contextState: audioContext
+                ? audioContext.state
+                : "unavailable"
         };
     }
 
+    /*
+     * iPhone / iPadでは最初のpointerdown内でresumeするのが最も確実。
+     */
+    function handleFirstInteraction() {
+        unlockAudio();
+    }
+
     function registerButtonSounds() {
+        document.addEventListener(
+            "pointerdown",
+            handleFirstInteraction,
+            {
+                capture: true,
+                passive: true
+            }
+        );
+
         document.addEventListener("click", (event) => {
             const button = event.target.closest("button");
 
@@ -470,8 +463,8 @@
         playComboCoin,
         setMuted,
         toggleMute,
-        isMuted,
-        isBgmPlaying,
+        isMuted: () => muted,
+        isBgmPlaying: () => bgmPlaying,
         getStatus
     });
 })();
