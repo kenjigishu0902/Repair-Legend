@@ -1,6 +1,6 @@
 /* =========================================================
    Repair Legend v1.0
-   game.js - iPhone / iPad Safari対応修正版
+   game.js - 会話・関連問題対応 完成版
    ========================================================= */
 
 "use strict";
@@ -46,6 +46,7 @@
         {
             id: "iphone-screen",
             category: "iPhone",
+            preferredQuestionIds: [4, 5, 9, 12, 15],
             opening: "すみません！iPhoneを落として画面が割れてしまいました……。",
             reception: "画面は映っていますが、タッチが時々勝手に動きます。修理できますか？",
             accepted: "お願いします！大事なデータが入っているんです。",
@@ -55,6 +56,7 @@
         {
             id: "iphone-battery",
             category: "iPhone",
+            preferredQuestionIds: [7, 11, 14],
             opening: "最近、iPhoneの充電がすぐになくなってしまいます。",
             reception: "朝100％にしても、お昼には残り20％くらいになります。",
             accepted: "バッテリー交換をお願いします！",
@@ -64,6 +66,7 @@
         {
             id: "iphone-charge",
             category: "iPhone",
+            preferredQuestionIds: [8, 14],
             opening: "ケーブルを挿してもiPhoneが充電できません。",
             reception: "角度を変えると、たまに充電できることがあります。",
             accepted: "充電口の修理をお願いします。",
@@ -73,6 +76,7 @@
         {
             id: "android-screen",
             category: "Android",
+            preferredQuestionIds: [20, 23, 25],
             opening: "Androidスマホの画面が真っ暗になりました。",
             reception: "着信音は鳴りますが、画面だけ何も映りません。",
             accepted: "データを消さずに修理してください。",
@@ -82,6 +86,7 @@
         {
             id: "android-battery",
             category: "Android",
+            preferredQuestionIds: [22, 24],
             opening: "スマホの背面が少し浮いてきました。",
             reception: "最近、本体が熱くなることもあります。",
             accepted: "危なくないように修理をお願いします。",
@@ -91,6 +96,7 @@
         {
             id: "pixel-fingerprint",
             category: "Android",
+            preferredQuestionIds: [16, 17, 19],
             opening: "Pixelの画面を交換してから指紋認証が使えません。",
             reception: "指紋を登録し直そうとしても途中で失敗します。",
             accepted: "指紋認証も使えるようにしてください。",
@@ -100,6 +106,7 @@
         {
             id: "galaxy-screen",
             category: "Android",
+            preferredQuestionIds: [18, 19, 25, 27],
             opening: "Galaxyを落として画面に緑の線が出ました。",
             reception: "海外で購入した端末ですが、修理できますか？",
             accepted: "型番を確認して修理をお願いします。",
@@ -109,6 +116,7 @@
         {
             id: "switch-display",
             category: "Switch",
+            preferredQuestionIds: [28, 36],
             opening: "Switchの本体画面だけ映らなくなりました。",
             reception: "テレビにつなぐと普通にゲームできます。",
             accepted: "本体画面の修理をお願いします。",
@@ -118,6 +126,7 @@
         {
             id: "switch-card",
             category: "Switch",
+            preferredQuestionIds: [30, 31, 37],
             opening: "Switchがゲームカードを読み込まなくなりました。",
             reception: "microSDカードは読み込めています。",
             accepted: "ゲームカードスロットを確認してください。",
@@ -127,6 +136,7 @@
         {
             id: "switch-charge",
             category: "Switch",
+            preferredQuestionIds: [29, 35],
             opening: "Switchがまったく充電できません。",
             reception: "別の充電器を使っても反応がありません。",
             accepted: "原因を調べて修理してください。",
@@ -136,6 +146,7 @@
         {
             id: "water-damage",
             category: "修理知識",
+            preferredQuestionIds: [13, 24, 44, 45, 49],
             opening: "スマホを水の中に落としてしまいました！",
             reception: "一度電源が入りましたが、今は反応しません。",
             accepted: "データが必要なので、できる限りお願いします。",
@@ -145,6 +156,7 @@
         {
             id: "speaker",
             category: "修理知識",
+            preferredQuestionIds: [26, 38, 42, 50],
             opening: "スマホから音が聞こえなくなりました。",
             reception: "通話も動画も音が小さくて聞き取りにくいです。",
             accepted: "スピーカーを確認してください。",
@@ -170,6 +182,7 @@
         currentCustomer: null,
         currentQuestion: null,
         lastCustomerId: null,
+        usedScenarioQuestionIds: [],
         timer: CONFIG.quizTime,
         timerId: null,
         timerToken: 0,
@@ -332,6 +345,7 @@
             currentCustomer: null,
             currentQuestion: null,
             lastCustomerId: null,
+            usedScenarioQuestionIds: [],
             answerLocked: false
         });
 
@@ -358,7 +372,12 @@
         clearAnswers();
 
         dom.customer.className = "";
-        dom.feni.classList.remove("repairing", "celebrating", "damage");
+        dom.feni.classList.remove(
+            "repairing",
+            "celebrating",
+            "damage",
+            "quizMode"
+        );
 
         state.gauge = 0;
         updateGauge();
@@ -379,6 +398,7 @@
         state.customerMoney = 0;
         state.answerLocked = false;
         state.currentQuestion = null;
+        state.usedScenarioQuestionIds = [];
 
         stopTimer();
         hideResult();
@@ -389,7 +409,12 @@
         clearAnswers();
 
         dom.customer.className = "";
-        dom.feni.classList.remove("repairing", "celebrating", "damage");
+        dom.feni.classList.remove(
+            "repairing",
+            "celebrating",
+            "damage",
+            "quizMode"
+        );
 
         updateGauge();
 
@@ -413,7 +438,11 @@
         if (token !== state.sequence) return;
 
         showSpeech(state.currentCustomer.opening);
-        await wait(850);
+        await wait(getSpeechDuration(
+            state.currentCustomer.opening,
+            2400,
+            5200
+        ));
         if (token !== state.sequence) return;
 
         dom.customerSymptom.textContent = state.currentCustomer.reception;
@@ -441,21 +470,37 @@
         hideReception();
 
         showSpeech(state.currentCustomer.accepted);
-        await wait(850);
+
+        await wait(getSpeechDuration(
+            state.currentCustomer.accepted,
+            2200,
+            4600
+        ));
 
         showSpeech(state.currentCustomer.repairing);
         dom.feni.classList.add("repairing");
-        await wait(750);
+
+        await wait(getSpeechDuration(
+            state.currentCustomer.repairing,
+            2200,
+            4600
+        ));
 
         dom.feni.classList.remove("repairing");
-        hideSpeech();
         showRepair();
+
+        await wait(700);
+        hideSpeech();
 
         state.busy = false;
         beginQuestion();
     }
 
     function beginQuestion() {
+        hideSpeech();
+        dom.customer.classList.add("quizMode");
+        dom.feni.classList.add("quizMode");
+
         if (state.gauge >= CONFIG.gaugeMax) {
             completeRepair();
             return;
@@ -488,11 +533,43 @@
     }
 
     function getQuestion() {
-        let question = null;
+        const customer = state.currentCustomer;
+
+        if (!customer) {
+            return null;
+        }
+
+        const preferredIds = Array.isArray(customer.preferredQuestionIds)
+            ? customer.preferredQuestionIds
+            : [];
+
+        const unusedPreferredIds = preferredIds.filter(
+            (questionId) => !state.usedScenarioQuestionIds.includes(questionId)
+        );
+
+        const candidates = unusedPreferredIds.length > 0
+            ? unusedPreferredIds
+            : preferredIds;
+
+        if (
+            candidates.length > 0 &&
+            typeof RepairLegendQuiz.getQuestionById === "function"
+        ) {
+            const questionId =
+                candidates[Math.floor(Math.random() * candidates.length)];
+
+            const relatedQuestion =
+                RepairLegendQuiz.getQuestionById(questionId, true);
+
+            if (relatedQuestion) {
+                state.usedScenarioQuestionIds.push(questionId);
+                return relatedQuestion;
+            }
+        }
 
         try {
-            question = RepairLegendQuiz.getNextQuestion({
-                category: state.currentCustomer ? state.currentCustomer.category : null,
+            let question = RepairLegendQuiz.getNextQuestion({
+                category: customer.category,
                 shuffleChoices: true
             });
 
@@ -501,11 +578,12 @@
                     shuffleChoices: true
                 });
             }
+
+            return question;
         } catch (error) {
             console.error("問題取得エラー", error);
+            return null;
         }
-
-        return question;
     }
 
     function answerQuestion(event) {
@@ -669,6 +747,9 @@
         stopTimer();
         hideQuiz();
 
+        dom.customer.classList.remove("quizMode");
+        dom.feni.classList.remove("quizMode");
+
         dom.feni.classList.add("celebrating");
         dom.customer.classList.remove("waiting");
         dom.customer.classList.add("happy");
@@ -680,7 +761,14 @@
         safeSound("playCoin");
         showSpeech(state.currentCustomer.completed);
 
-        await wait(CONFIG.completeMs);
+        await wait(Math.max(
+            CONFIG.completeMs,
+            getSpeechDuration(
+                state.currentCustomer.completed,
+                2600,
+                5200
+            )
+        ));
         dom.feni.classList.remove("celebrating");
 
         dom.resultRank.textContent = state.rank;
@@ -851,6 +939,20 @@
     function setPhase(phase) {
         state.phase = phase;
         document.body.dataset.gamePhase = phase;
+    }
+
+    function getSpeechDuration(
+        text,
+        minimum = 2200,
+        maximum = 5000
+    ) {
+        const characterCount = String(text || "").length;
+        const calculated = 1100 + characterCount * 85;
+
+        return Math.min(
+            maximum,
+            Math.max(minimum, calculated)
+        );
     }
 
     function wait(ms) {
