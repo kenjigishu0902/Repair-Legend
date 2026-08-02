@@ -2,21 +2,15 @@ from pathlib import Path
 
 from zipfile import ZipFile, ZIP_DEFLATED
 
-import re
-
-source = Path("/mnt/data/repair_extract/リペアレジェンド/style.css")
-
-css = source.read_text(encoding="utf-8")
-
-patch = r'''
-
-/* =========================================================
+patch = r'''/* =========================================================
 
    REPAIR LEGEND v1.0
 
    会話・クイズ重なり防止 最終調整
 
    game.js の quizMode クラスと連動
+
+   ※ 既存の style.css の一番下へ追加してください
 
    ========================================================= */
 
@@ -102,7 +96,7 @@ patch = r'''
 
     );
 
-    z-index: 490;　
+    z-index: 490;
 
 }
 
@@ -504,37 +498,528 @@ body[data-game-phase="result"] #touchMap .touchSpot {
 
 '''
 
-# Avoid duplicate patch if rerun.
+css_path = Path("/mnt/data/repair_legend_layout_patch.css")
 
-marker = "会話・クイズ重なり防止 最終調整"
+css_path.write_text(patch, encoding="utf-8")
 
-if marker in css:
+zip_path = Path("/mnt/data/Repair_Legend_layout_patch.zip")
 
-    css = css[:css.index("/* =========================================================\n   REPAIR LEGEND v1.0\n   会話・クイズ重なり防止 最終調整")].rstrip() + "\n"
+with ZipFile(zip_path, "w", ZIP_DEFLATED) as z:
 
-css = css.rstrip() + patch + "\n"
+    z.write(css_path, arcname="repair_legend_layout_patch.css")
 
-# Basic structural checks.
+print(f"CSS: {css_path} ({css_path.stat().st_size:,} bytes)")
 
-without_comments = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+print(f"ZIP: {zip_path} ({zip_path.stat().st_size:,} bytes)")from pathlib import Path
 
-if without_comments.count("{") != without_comments.count("}"):
+from zipfile import ZipFile, ZIP_DEFLATED
 
-    raise RuntimeError("CSSの波括弧の数が一致しません。")
+patch = r'''/* =========================================================
 
-output = Path("/mnt/data/style_fixed.css")
+   REPAIR LEGEND v1.0
 
-output.write_text(css, encoding="utf-8")
+   会話・クイズ重なり防止 最終調整
 
-zip_path = Path("/mnt/data/Repair_Legend_style_fixed.zip")
+   game.js の quizMode クラスと連動
 
-with ZipFile(zip_path, "w", ZIP_DEFLATED) as archive:
+   ※ 既存の style.css の一番下へ追加してください
 
-    archive.write(output, arcname="style.css")
+   ========================================================= */
 
-print(f"style.css: {output.stat().st_size:,} bytes")
+/*
 
-print(f"ZIP: {zip_path.stat().st_size:,} bytes")
+ * クイズ中はキャラクターを問題パネルより上へ移動する。
 
-print("CSS brace check: OK")　
+ * transformは歩行・待機・リアクションのアニメーションで使用するため、
 
+ * 位置調整はbottomとwidthで行う。
+
+ */
+
+#customer.quizMode {
+
+    bottom: calc(
+
+        var(--quiz-height) +
+
+        var(--safe-bottom) +
+
+        clamp(68px, 9vh, 112px)
+
+    );
+
+    width: clamp(66px, 10vw, 112px);
+
+    z-index: 45;
+
+}
+
+#feni.quizMode {
+
+    bottom: calc(
+
+        var(--quiz-height) +
+
+        var(--safe-bottom) +
+
+        clamp(66px, 9vh, 110px)
+
+    );
+
+    width: clamp(76px, 11vw, 126px);
+
+    z-index: 46;
+
+}
+
+/* クイズパネルは常にキャラクターと店内タップ領域より前面 */
+
+#quizWindow {
+
+    z-index: 500;
+
+    pointer-events: none;
+
+}
+
+#quizWindow.show {
+
+    pointer-events: auto;
+
+}
+
+#quizWindow.show .answerBtn {
+
+    pointer-events: auto;
+
+}
+
+/* 修理ゲージもクイズパネルと干渉しない位置に固定 */
+
+#repairPanel {
+
+    bottom: calc(
+
+        var(--quiz-height) +
+
+        var(--safe-bottom) +
+
+        clamp(10px, 1.8vh, 22px)
+
+    );
+
+    z-index: 490;
+
+}
+
+/* 会話中の吹き出しはキャラの頭上に確保 */
+
+body[data-game-phase="talking"] #speech,
+
+body[data-game-phase="reception"] #speech,
+
+body[data-game-phase="entering"] #speech,
+
+body[data-game-phase="complete"] #speech {
+
+    max-height: min(31vh, 245px);
+
+    overflow-y: auto;
+
+    overscroll-behavior: contain;
+
+}
+
+/* クイズ中は会話の吹き出しを確実に非表示 */
+
+body[data-game-phase="quiz"] #speech,
+
+body[data-game-phase="answer"] #speech {
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+}
+
+/* 透明な店内タップ領域が画面UIを邪魔しないよう制御 */
+
+#touchMap {
+
+    pointer-events: none;
+
+}
+
+#touchMap .touchSpot {
+
+    pointer-events: auto;
+
+}
+
+body[data-game-phase="title"] #touchMap .touchSpot,
+
+body[data-game-phase="reception"] #touchMap .touchSpot,
+
+body[data-game-phase="quiz"] #touchMap .touchSpot,
+
+body[data-game-phase="answer"] #touchMap .touchSpot,
+
+body[data-game-phase="complete"] #touchMap .touchSpot,
+
+body[data-game-phase="result"] #touchMap .touchSpot {
+
+    pointer-events: none;
+
+}
+
+/* 主要ボタンをiPhone・iPadで確実にタップ可能にする */
+
+#startButton,
+
+#acceptButton,
+
+#nextCustomer,
+
+.answerBtn {
+
+    pointer-events: auto;
+
+    touch-action: manipulation;
+
+    -webkit-user-select: none;
+
+    user-select: none;
+
+}
+
+/* =========================================================
+
+   PHONE PORTRAIT: クイズ中のキャラクター位置
+
+   ========================================================= */
+
+@media (max-width: 600px) and (orientation: portrait) {
+
+    #customer.quizMode {
+
+        right: clamp(13px, 6vw, 34px);
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            58px
+
+        );
+
+        width: clamp(60px, 17vw, 78px);
+
+    }
+
+    #feni.quizMode {
+
+        left: clamp(54px, 19vw, 105px);
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            57px
+
+        );
+
+        width: clamp(66px, 19vw, 86px);
+
+    }
+
+    body[data-game-phase="talking"] #speech,
+
+    body[data-game-phase="reception"] #speech,
+
+    body[data-game-phase="complete"] #speech {
+
+        right: 10px;
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            118px
+
+        );
+
+        width: min(84vw, 355px);
+
+        max-height: 25vh;
+
+    }
+
+}
+
+/* =========================================================
+
+   SMALL PHONE: 390px以下
+
+   ========================================================= */
+
+@media (max-width: 390px) and (orientation: portrait) {
+
+    #customer.quizMode {
+
+        right: 15px;
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            51px
+
+        );
+
+        width: 58px;
+
+    }
+
+    #feni.quizMode {
+
+        left: 61px;
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            50px
+
+        );
+
+        width: 64px;
+
+    }
+
+    #repairPanel {
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            5px
+
+        );
+
+    }
+
+}
+
+/* =========================================================
+
+   LANDSCAPE PHONE
+
+   ========================================================= */
+
+@media (max-height: 550px) and (orientation: landscape) {
+
+    #customer.quizMode {
+
+        right: clamp(18px, 8vw, 90px);
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            18px
+
+        );
+
+        width: clamp(48px, 7vw, 66px);
+
+    }
+
+    #feni.quizMode {
+
+        left: clamp(70px, 19vw, 190px);
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            17px
+
+        );
+
+        width: clamp(52px, 7.5vw, 72px);
+
+    }
+
+    #repairPanel {
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            3px
+
+        );
+
+        width: min(55vw, 500px);
+
+    }
+
+    body[data-game-phase="talking"] #speech,
+
+    body[data-game-phase="reception"] #speech,
+
+    body[data-game-phase="complete"] #speech {
+
+        bottom: 42%;
+
+        max-height: 31vh;
+
+    }
+
+}
+
+/* =========================================================
+
+   iPad / TABLET PORTRAIT
+
+   ========================================================= */
+
+@media (min-width: 700px) and (min-height: 700px) {
+
+    #customer.quizMode {
+
+        right: clamp(45px, 10vw, 130px);
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            86px
+
+        );
+
+        width: clamp(92px, 12vw, 132px);
+
+    }
+
+    #feni.quizMode {
+
+        left: clamp(155px, 27vw, 340px);
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            84px
+
+        );
+
+        width: clamp(105px, 13vw, 145px);
+
+    }
+
+    body[data-game-phase="talking"] #speech,
+
+    body[data-game-phase="reception"] #speech,
+
+    body[data-game-phase="complete"] #speech {
+
+        bottom: 55%;
+
+        width: min(43vw, 390px);
+
+        max-height: 24vh;
+
+    }
+
+}
+
+/* =========================================================
+
+   VERY SHORT VIEWPORT
+
+   画面高が極端に低い場合はキャラをさらに縮小
+
+   ========================================================= */
+
+@media (max-height: 430px) {
+
+    #customer.quizMode {
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            7px
+
+        );
+
+        width: 44px;
+
+    }
+
+    #feni.quizMode {
+
+        bottom: calc(
+
+            var(--quiz-height) +
+
+            var(--safe-bottom) +
+
+            6px
+
+        );
+
+        width: 48px;
+
+    }
+
+    #repairPanel {
+
+        display: none;
+
+    }
+
+}
+
+'''
+
+css_path = Path("/mnt/data/repair_legend_layout_patch.css")
+
+css_path.write_text(patch, encoding="utf-8")
+
+zip_path = Path("/mnt/data/Repair_Legend_layout_patch.zip")
+
+with ZipFile(zip_path, "w", ZIP_DEFLATED) as z:
+
+    z.write(css_path, arcname="repair_legend_layout_patch.css")
+
+print(f"CSS: {css_path} ({css_path.stat().st_size:,} bytes)")
+
+print(f"ZIP: {zip_path} ({zip_path.stat().st_size:,} bytes)")
