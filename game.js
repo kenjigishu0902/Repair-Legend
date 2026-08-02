@@ -163,7 +163,8 @@
                 "画面の状態を確認して修理します！",
             completed:
                 "画面がきれいになった！操作も問題ありません！",
-            category: "iPhone"
+            category: "iPhone",
+            preferredQuestionIds: [4, 5, 9, 12, 15]
         },
 
         {
@@ -178,7 +179,8 @@
                 "バッテリーと電源系統を確認します！",
             completed:
                 "これで安心して一日使えます！",
-            category: "iPhone"
+            category: "iPhone",
+            preferredQuestionIds: [7, 11, 14]
         },
 
         {
@@ -193,7 +195,8 @@
                 "充電口と内部の接続を確認します！",
             completed:
                 "しっかり充電できるようになりました！",
-            category: "iPhone"
+            category: "iPhone",
+            preferredQuestionIds: [8, 14]
         },
 
         {
@@ -208,7 +211,8 @@
                 "画面と表示回路を診断します！",
             completed:
                 "写真もデータもそのままです！ありがとうございます！",
-            category: "Android"
+            category: "Android",
+            preferredQuestionIds: [20, 23, 25]
         },
 
         {
@@ -223,7 +227,8 @@
                 "バッテリー膨張の可能性を確認します！",
             completed:
                 "背面もきれいに閉まりました！",
-            category: "Android"
+            category: "Android",
+            preferredQuestionIds: [22, 24]
         },
 
         {
@@ -238,7 +243,8 @@
                 "画面とキャリブレーション状態を確認します！",
             completed:
                 "指紋認証も正常に使えます！",
-            category: "Android"
+            category: "Android",
+            preferredQuestionIds: [16, 17, 19]
         },
 
         {
@@ -253,7 +259,8 @@
                 "販売地域と部品仕様を確認します！",
             completed:
                 "きれいに表示されるようになりました！",
-            category: "Android"
+            category: "Android",
+            preferredQuestionIds: [18, 19, 25, 27]
         },
 
         {
@@ -268,7 +275,8 @@
                 "液晶とバックライトを診断します！",
             completed:
                 "本体だけでも遊べるようになりました！",
-            category: "Switch"
+            category: "Switch",
+            preferredQuestionIds: [28, 36]
         },
 
         {
@@ -283,7 +291,8 @@
                 "カードスロットの状態を確認します！",
             completed:
                 "ゲームカードを読み込めるようになりました！",
-            category: "Switch"
+            category: "Switch",
+            preferredQuestionIds: [30, 31, 37]
         },
 
         {
@@ -298,7 +307,8 @@
                 "充電口と基板回路を診断します！",
             completed:
                 "電源が入りました！セーブデータも残っています！",
-            category: "Switch"
+            category: "Switch",
+            preferredQuestionIds: [29, 35]
         },
 
         {
@@ -313,7 +323,8 @@
                 "通電を止めて内部洗浄と基板診断を行います！",
             completed:
                 "データを確認できました！本当に助かりました！",
-            category: "修理知識"
+            category: "修理知識",
+            preferredQuestionIds: [13, 24, 44, 45, 49]
         },
 
         {
@@ -328,7 +339,8 @@
                 "設定、詰まり、部品故障を切り分けます！",
             completed:
                 "音がはっきり聞こえるようになりました！",
-            category: "修理知識"
+            category: "修理知識",
+            preferredQuestionIds: [26, 38, 42, 50]
         }
 
     ]);
@@ -492,6 +504,8 @@
 
         lastCustomerId: null,
 
+        usedScenarioQuestionIds: [],
+
         timerValue: GAME_CONFIG.quizTimeLimit,
 
         timerIntervalId: null,
@@ -521,7 +535,7 @@
 
         registerEventListeners();
 
-        resetVisualState();
+        resetVisualState(true);
 
         updateHud();
 
@@ -712,11 +726,9 @@
 
         if (!window.RepairLegendSound) {
 
-            console.error(
-                "Repair Legend: sound.jsが読み込まれていません。"
+            console.warn(
+                "Repair Legend: sound.jsが読み込まれていないため無音で開始します。"
             );
-
-            return false;
 
         }
 
@@ -805,18 +817,21 @@
 
         gameState.sequenceId += 1;
 
-        await RepairLegendSound.unlockAudio();
-
-        RepairLegendSound.playBgm({
-            restart: true,
-            fadeIn: true
-        });
+        resetGameProgress(false);
 
         dom.startScreen.classList.add("hidden");
 
-        await wait(500);
+        safeSoundPromise("unlockAudio");
 
-        resetGameProgress();
+        safeSoundPromise(
+            "playBgm",
+            {
+                restart: true,
+                fadeIn: true
+            }
+        );
+
+        await wait(250);
 
         gameState.processing = false;
 
@@ -825,7 +840,7 @@
     }
 
 
-    function resetGameProgress() {
+    function resetGameProgress(showTitle = false) {
 
         stopQuizTimer();
 
@@ -863,11 +878,13 @@
 
         gameState.lastCustomerId = null;
 
+        gameState.usedScenarioQuestionIds = [];
+
         RepairLegendQuiz.resetQuestionDeck();
 
         RepairLegendQuiz.createQuestionDeck(true);
 
-        resetVisualState();
+        resetVisualState(showTitle);
 
         updateHud();
 
@@ -922,7 +939,7 @@
 
         }
 
-        RepairLegendSound.playBell();
+        safeSound("playBell");
 
         dom.customer.classList.add("walking");
 
@@ -959,7 +976,11 @@
         );
 
         await wait(
-            GAME_CONFIG.receptionDelay
+            getSpeechDuration(
+                gameState.currentCustomer.opening,
+                2400,
+                5200
+            )
         );
 
         if (!isCurrentSequence(currentSequence)) {
@@ -986,6 +1007,8 @@
         gameState.customerWrongAnswers = 0;
 
         gameState.currentQuestion = null;
+
+        gameState.usedScenarioQuestionIds = [];
 
         gameState.answerLocked = false;
 
@@ -1107,7 +1130,13 @@
             gameState.currentCustomer.accepted
         );
 
-        await wait(1000);
+        await wait(
+            getSpeechDuration(
+                gameState.currentCustomer.accepted,
+                2200,
+                4600
+            )
+        );
 
         showSpeech(
             gameState.currentCustomer.repairing
@@ -1115,13 +1144,21 @@
 
         dom.feni.classList.add("repairing");
 
-        await wait(900);
+        await wait(
+            getSpeechDuration(
+                gameState.currentCustomer.repairing,
+                2200,
+                4600
+            )
+        );
 
         dom.feni.classList.remove("repairing");
 
-        hideSpeech();
-
         showRepairPanel();
+
+        await wait(650);
+
+        hideSpeech();
 
         gameState.processing = false;
 
@@ -1135,6 +1172,12 @@
        ===================================================== */
 
     function beginQuizQuestion() {
+
+        hideSpeech();
+
+        dom.customer.classList.add("quizMode");
+
+        dom.feni.classList.add("quizMode");
 
         if (
             gameState.repairGauge >=
@@ -1181,29 +1224,95 @@
 
     function getQuestionForCurrentCustomer() {
 
-        let question = null;
+        const customer =
+            gameState.currentCustomer;
 
-        const customerCategory =
-            gameState.currentCustomer
-                ? gameState.currentCustomer.category
-                : null;
+        if (!customer) {
 
-        if (customerCategory) {
-
-            question =
-                RepairLegendQuiz.getNextQuestion({
-                    category: customerCategory,
-                    shuffleChoices: true
-                });
+            return null;
 
         }
 
-        if (!question) {
+        const preferredQuestionIds =
+            Array.isArray(
+                customer.preferredQuestionIds
+            )
+                ? customer.preferredQuestionIds
+                : [];
+
+        const unusedPreferredIds =
+            preferredQuestionIds.filter(
+                function (questionId) {
+
+                    return !gameState
+                        .usedScenarioQuestionIds
+                        .includes(questionId);
+
+                }
+            );
+
+        const candidateIds =
+            unusedPreferredIds.length > 0
+                ? unusedPreferredIds
+                : preferredQuestionIds;
+
+        if (
+            candidateIds.length > 0 &&
+            typeof RepairLegendQuiz.getQuestionById ===
+                "function"
+        ) {
+
+            const selectedId =
+                candidateIds[
+                    Math.floor(
+                        Math.random() *
+                        candidateIds.length
+                    )
+                ];
+
+            const relatedQuestion =
+                RepairLegendQuiz.getQuestionById(
+                    selectedId,
+                    true
+                );
+
+            if (relatedQuestion) {
+
+                gameState.usedScenarioQuestionIds.push(
+                    selectedId
+                );
+
+                return relatedQuestion;
+
+            }
+
+        }
+
+        let question = null;
+
+        try {
 
             question =
                 RepairLegendQuiz.getNextQuestion({
+                    category: customer.category,
                     shuffleChoices: true
                 });
+
+            if (!question) {
+
+                question =
+                    RepairLegendQuiz.getNextQuestion({
+                        shuffleChoices: true
+                    });
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Repair Legend: 問題取得エラー",
+                error
+            );
 
         }
 
@@ -1423,7 +1532,7 @@
             "flash-correct"
         );
 
-        RepairLegendSound.playCorrect();
+        safeSound("playCorrect");
 
         dom.feni.classList.add(
             "celebrating"
@@ -1467,7 +1576,8 @@
             moneyEarned
         );
 
-        RepairLegendSound.playComboCoin(
+        safeSound(
+            "playComboCoin",
             gameState.combo
         );
 
@@ -1535,7 +1645,7 @@
             "damage"
         );
 
-        RepairLegendSound.playWrong();
+        safeSound("playWrong");
 
         updateHud();
 
@@ -1785,6 +1895,10 @@
 
         hideQuizWindow();
 
+        dom.customer.classList.remove("quizMode");
+
+        dom.feni.classList.remove("quizMode");
+
         dom.repairGauge.classList.add(
             "complete"
         );
@@ -1809,18 +1923,25 @@
 
         showCompleteEffect();
 
-        RepairLegendSound.playRepairComplete();
+        safeSound("playRepairComplete");
 
         await wait(700);
 
-        RepairLegendSound.playCoin();
+        safeSound("playCoin");
 
         showSpeech(
             gameState.currentCustomer.completed
         );
 
         await wait(
-            GAME_CONFIG.repairCompleteDuration
+            Math.max(
+                GAME_CONFIG.repairCompleteDuration,
+                getSpeechDuration(
+                    gameState.currentCustomer.completed,
+                    2600,
+                    5200
+                )
+            )
         );
 
         dom.feni.classList.remove(
@@ -2048,7 +2169,7 @@
         dom.rankUpEffect.textContent =
             `LEVEL UP！ LV.${gameState.level}`;
 
-        RepairLegendSound.playCoin();
+        safeSound("playCoin");
 
     }
 
@@ -2101,7 +2222,7 @@
             "show"
         );
 
-        RepairLegendSound.playRepairComplete();
+        safeSound("playRepairComplete");
 
     }
 
@@ -2460,11 +2581,21 @@
        VISUAL RESET
        ===================================================== */
 
-    function resetVisualState() {
+    function resetVisualState(showTitle = true) {
 
-        dom.startScreen.classList.remove(
-            "hidden"
-        );
+        if (showTitle) {
+
+            dom.startScreen.classList.remove(
+                "hidden"
+            );
+
+        } else {
+
+            dom.startScreen.classList.add(
+                "hidden"
+            );
+
+        }
 
         hideReceptionWindow();
 
@@ -2502,10 +2633,15 @@
 
         dom.customer.className = "";
 
+        dom.customer.classList.remove(
+            "quizMode"
+        );
+
         dom.feni.classList.remove(
             "repairing",
             "celebrating",
-            "damage"
+            "damage",
+            "quizMode"
         );
 
     }
@@ -2523,7 +2659,8 @@
             window.RepairLegendSound
         ) {
 
-            RepairLegendSound.pauseBgm(
+            safeSound(
+                "pauseBgm",
                 false
             );
 
@@ -2591,6 +2728,89 @@
     /* =====================================================
        UTILITY
        ===================================================== */
+
+    function safeSound(method, ...args) {
+
+        try {
+
+            if (
+                window.RepairLegendSound &&
+                typeof RepairLegendSound[method] ===
+                    "function"
+            ) {
+
+                return RepairLegendSound[method](
+                    ...args
+                );
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                `Repair Legend: サウンド処理をスキップしました（${method}）`,
+                error
+            );
+
+        }
+
+        return undefined;
+
+    }
+
+
+    function safeSoundPromise(method, ...args) {
+
+        try {
+
+            Promise.resolve(
+                safeSound(method, ...args)
+            ).catch(
+                function (error) {
+
+                    console.warn(
+                        `Repair Legend: サウンド処理を継続できませんでした（${method}）`,
+                        error
+                    );
+
+                }
+            );
+
+        } catch (error) {
+
+            console.warn(
+                `Repair Legend: サウンド処理を開始できませんでした（${method}）`,
+                error
+            );
+
+        }
+
+    }
+
+
+    function getSpeechDuration(
+        text,
+        minimum = 2200,
+        maximum = 5000
+    ) {
+
+        const characterCount =
+            String(text || "").length;
+
+        const calculatedDuration =
+            1100 +
+            characterCount * 85;
+
+        return Math.min(
+            maximum,
+            Math.max(
+                minimum,
+                calculatedDuration
+            )
+        );
+
+    }
+
 
     function wait(milliseconds) {
 
